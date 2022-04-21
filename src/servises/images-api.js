@@ -1,19 +1,22 @@
 import axios from 'axios';
 import propTypes from 'prop-types';
 
-const key = '25783532-c25c49afce5183be9881181c4';
-
-// axios.defaults.headers.common['Authorization'] = '25783532-c25c49afce5183be9881181c4';
-
-  axios.defaults.baseURL = 'https://pixabay.com/api/';
-  
+const KEY = '25783532-c25c49afce5183be9881181c4';
+axios.defaults.baseURL = 'https://pixabay.com/api/';  
 
 
 const fetchImages = ({searchQuery='', currentPage=1, pageSize=12})=>{
+  const searchParams = new URLSearchParams({
+    key: KEY,
+    q: searchQuery,
+    image_type: 'photo',
+    orientation: 'horizontal',
+    safesearch: true,
+    page: currentPage,
+    per_page: pageSize,
+    });
     return axios
-        .get(
-            `?q=${searchQuery}&key=${key}&page=${currentPage}&image_type=photo&orientation=horizontal&per_page=${pageSize}`
-            )
+        .get(`?${searchParams}`)
         .then(response => response.data);
 }
 

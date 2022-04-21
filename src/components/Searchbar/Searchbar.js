@@ -1,4 +1,4 @@
-import React, {Component} from "react";
+import React, { useState } from 'react';
 import styles from './Searchbar.module.css';
 import { ReactComponent as SearchBtn } from './search.svg';
 import propTypes from 'prop-types';
@@ -8,48 +8,32 @@ import Notiflix from 'notiflix';
 
 
 
-class Searchbar extends Component {
-   constructor() {
-       super();
-       this.state = {            
-            searchQuery:''            
-        }        
-   } 
-          
+const Searchbar = ({onSubmit}) => {
+  
+   const [searchQuery, setSearchQuery] = useState('');       
 
-    handleSubmit = e => {         
+    const handleSubmit = e => {         
         e.preventDefault();        
-        const query = this.state.searchQuery.trim();
-        if(query === '') {
-           
-            Notiflix.Notify.info('Enter search word');
-           
-           
+        const query = searchQuery.trim();
+        if(query === '') {           
+            Notiflix.Notify.info('Enter search word');           
             return;
         }
        
-        this.props.onSubmit(query);
-
-        this.setState({
-            searchQuery: ''            
-        });
-        
+        onSubmit(query);
+        setSearchQuery('');        
     }
 
    
-    handleChange = e => {
-        
-        this.setState({
-            searchQuery: e.currentTarget.value            
-        })
+    const handleChange = e => {
+        setSearchQuery(e.currentTarget.value);        
     }
-
-    render() {
+    
         return(
             <header className={styles.searchbar}>
             <form 
                 className={styles.form}
-                onSubmit={this.handleSubmit}
+                onSubmit={handleSubmit}
                 >
                 <button type="submit" className={styles.button} >
                 <span className={styles.buttonLabel} ><SearchBtn width="40" height="40"/></span>
@@ -61,18 +45,17 @@ class Searchbar extends Component {
                 autoComplete="off"
                 autoFocus
                 placeholder="Search images and photos"
-                value={this.state.searchQuery}
-                onChange={this.handleChange}
+                value={searchQuery}
+                onChange={handleChange}
                 />
             </form>
             </header>
         )
-    }
+    
 }
 
 Searchbar.propTypes = {
-    onSubmit: propTypes.func.isRequired,
-    
+    onSubmit: propTypes.func.isRequired,    
   }
 
 export default Searchbar;

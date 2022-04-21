@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import styles from './App.module.css';
 import Notiflix from 'notiflix';
@@ -21,6 +19,9 @@ const App = () => {
   let largeImageURL = '';
 
   useEffect(() => {
+    if (searchQuery === '') {
+      return;
+    }
     fetchImages();
     if(images.length > 12) {
       scroll.scrollToBottom();
@@ -41,14 +42,17 @@ const App = () => {
       if(hits.length===0) {
         Notiflix.Notify.info('No images found');
         return;
-      }
-      
+      }      
+
       setImages([...images, ...hits]);
       setCurrentPage(currentPage + 1);
+      
     })
     .catch(error => setError(error))
     .finally(setIsLoading(true));  
-  }
+  };
+
+  
 
   const toggleModal = () => {
     setShowModal(!showModal);

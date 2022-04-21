@@ -1,6 +1,6 @@
 
 
-import React, {Component} from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './App.module.css';
 import Notiflix from 'notiflix';
 import imagesApi from "../servises/images-api";
@@ -11,46 +11,30 @@ import ImageGallery from './ImageGallery';
 import Modal from './Modal';
 import { animateScroll as scroll } from "react-scroll";
 
-class App extends Component {
-  state = {
-    images: [],
-    currentPage: 1,
-    searchQuery:'',
-    isLoading: false,
-    error: null,
-    showModal: false
-}
+const App = () => {
+  const [images, setImages] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  let largeImageURL = '';
 
-
-
-  componentDidUpdate(prevProps, prevState) {
-    if (prevState.searchQuery !== this.state.searchQuery) {
-        this.fetchImages();
-        window.scrollBy(0, 400);
+  useEffect(() => {
+    fetchImages();
+    if(images.length > 12) {
+      scroll.scrollToBottom();
     }
-    if(this.state.images.length > 12) {
-          scroll.scrollToBottom();
-        }
-    }
+  }, [searchQuery]);
+  
 
-  onChangeQuery = (query) => {
-    this.setState({
-      images: [],
-      currentPage: 1,
-      searchQuery: query,
-      isLoading: false,
-      error: null,
-      showModal: false
-    })
+  const onChangeQuery = (query) => {
+    setSearchQuery(query);
   }
 
-  largeImageURL = ''
-
-  fetchImages = () => {
-    const {currentPage, searchQuery} = this.state;
+  const fetchImages = () => {    
     const options = {currentPage, searchQuery};
-
-    this.setState({isLoading: true});
+    setIsLoading(true);   
    
     imagesApi(options)    
     .then(({hits}) =>{
@@ -58,52 +42,39 @@ class App extends Component {
         Notiflix.Notify.info('No images found');
         return;
       }
-      this.setState( prevState =>({
-        images: [...prevState.images, ...hits],
-        currentPage: prevState.currentPage + 1
-      }));
-     
+      
+      setImages([...images, ...hits]);
+      setCurrentPage(currentPage + 1);
     })
-    .catch(error => this.setState({error}))
-    .finally(this.setState({isLoading: false}));
-    
-    
-    
-}
-
-  toggleModal = () => {
-    this.setState(({ showModal }) => ({
-      showModal: !showModal,
-    }));
-  };
-
-  openModal = (searchId) => {
-   const image = this.state.images.find(image => image.id === searchId);  
-   this.largeImageURL = image.largeImageURL;
-   this.toggleModal();
-   
+    .catch(error => setError(error))
+    .finally(setIsLoading(true));  
   }
 
+  const toggleModal = () => {
+    setShowModal(!showModal);
+  };
 
-  render() {
-    const {images, isLoading, error, showModal} = this.state;
+  const openModal = (searchId) => {
+   const image = images.find(image => image.id === searchId);  
+   largeImageURL = image.largeImageURL;
+   toggleModal();   
+  }
+
     const shouldRenderLoadMoreButton = images.length > 0 && !isLoading;
     
     return(
       <div className={styles.app}>
       {error && Notiflix.Notify.failure(error)}
-      <Searchbar onSubmit={this.onChangeQuery}/>
+      <Searchbar onSubmit={onChangeQuery}/>
       {isLoading && <Loader />}      
-      {images.length > 0 && <ImageGallery openModal={this.openModal} images={images}/>}
-      {shouldRenderLoadMoreButton && 
-      
-        <Button onClick={this.fetchImages}/>
-      
+      {images.length > 0 && <ImageGallery openModal={openModal} images={images}/>}
+      {shouldRenderLoadMoreButton &&       
+        <Button onClick={fetchImages}/>      
       }
-      {showModal && <Modal largeImg={this.largeImageURL} onClose={this.toggleModal}/>}
+      {showModal && <Modal largeImg={largeImageURL} onClose={toggleModal}/>}
       </div>
     )
-  }
+  
 };
 
 export default App;

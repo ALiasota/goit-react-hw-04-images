@@ -5,8 +5,7 @@ import propTypes from 'prop-types';
 
 const modalRoot = document.querySelector('#modal-root');
 
-const Modal = ({largeImg, onClose}) => {
-    
+const Modal = ({largeImg, onClose}) => {    
     useEffect(() => {
         window.addEventListener('keydown', handleKeyDown);
 
@@ -33,9 +32,9 @@ const Modal = ({largeImg, onClose}) => {
                     <img src={largeImg} alt="" />
                 </div>
             </div>,
-            modalRoot,
+            modalRoot
         )
-    
+
 }
 
 Modal.propTypes = {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styles from './App.module.css';
 import Notiflix from 'notiflix';
 import imagesApi from "../servises/images-api";
@@ -16,51 +16,68 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  let largeImageURL = '';
-
+  const [showMore, setShowMore] = useState(true);
+  const largeImageURL = useRef('');
+  
   useEffect(() => {
+
+    const fetchImagesUse = () => {    
+      const options = {currentPage, searchQuery};
+      setIsLoading(true);   
+     
+      imagesApi(options)    
+      .then(({hits}) =>{
+        if(hits.length===0) {
+          Notiflix.Notify.info('No images found');
+          return;
+        }      
+  
+        setImages([...images, ...hits]);
+        setCurrentPage(currentPage + 1);        
+      })
+      .catch(error => setError(error))
+      .finally(
+        setIsLoading(false));  
+      setShowMore(false);
+    };
+
+
     if (searchQuery === '') {
       return;
     }
-    fetchImages();
-    if(images.length > 12) {
-      scroll.scrollToBottom();
+    if (showMore) {
+      fetchImagesUse();
+      if(images.length > 0) {
+        scroll.scrollToBottom();
+      }
+      
     }
-  }, [searchQuery]);
+    
+    
+  }, [currentPage, images, searchQuery, showMore]);
   
 
   const onChangeQuery = (query) => {
     setSearchQuery(query);
-  }
+    setImages([]);
+    setCurrentPage(1);
+    setIsLoading(false);
+    setError(null);
+    setShowModal(false);
+    setShowMore(true);
+  }  
 
-  const fetchImages = () => {    
-    const options = {currentPage, searchQuery};
-    setIsLoading(true);   
-   
-    imagesApi(options)    
-    .then(({hits}) =>{
-      if(hits.length===0) {
-        Notiflix.Notify.info('No images found');
-        return;
-      }      
-
-      setImages([...images, ...hits]);
-      setCurrentPage(currentPage + 1);
-      
-    })
-    .catch(error => setError(error))
-    .finally(setIsLoading(true));  
-  };
-
-  
+  const onShowMore = () => {
+    setShowMore(true);
+  }  
 
   const toggleModal = () => {
     setShowModal(!showModal);
   };
 
-  const openModal = (searchId) => {
+  const openModal = (searchId) => {    
    const image = images.find(image => image.id === searchId);  
-   largeImageURL = image.largeImageURL;
+   largeImageURL.current = image.largeImageURL;    
    toggleModal();   
   }
 
@@ -73,9 +90,9 @@ const App = () => {
       {isLoading && <Loader />}      
       {images.length > 0 && <ImageGallery openModal={openModal} images={images}/>}
       {shouldRenderLoadMoreButton &&       
-        <Button onClick={fetchImages}/>      
+        <Button onClick={onShowMore}/>      
       }
-      {showModal && <Modal largeImg={largeImageURL} onClose={toggleModal}/>}
+      {showModal && <Modal largeImg={largeImageURL.current} onClose={toggleModal}/>}
       </div>
     )
   
